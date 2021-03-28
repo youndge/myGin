@@ -70,7 +70,14 @@ func main()  {
 		})
 		//查看所有代办事项
 		v1Group.GET("/todo",func(c *gin.Context)  {
-			
+			//查询todo这个表里的所有代办事项
+			var todoList []Todo
+			if err = DB.Find(&todoList).Error;err != nil{
+				c.JSON(http.StatusOK, gin.H{
+					"error":err.Error()})
+			}else{
+				c.JSON(http.StatusOK, todoList)
+			}
 			
 		})
 		//查看某一个代办事项
@@ -79,11 +86,36 @@ func main()  {
 		})
 		//查看所有代办事项
 		v1Group.PUT("/todo:id",func(c *gin.Context)  {
-			
+			id,ok := c.Params.Get("id")
+			if !ok {
+				c.JSON(http.StatusOK, gin.H{"error":"Invalid id!"})
+				return
+			}
+			var todo Todo
+			if err = DB.Where("id=?",id).First(&todo).Error;err != nil{
+				c.JSON(http.StatusOK, gin.H{
+					"error":err.Error()})
+				return
+			}
+			c.BindJSON(&todo)
+			if err = DB.Save(&todo).Error; err != nil{
+				c.JSON(http.StatusOK,gin.H{"error":err.Error()})
+			}else{
+				c.JSON(http.StatusOK,todo)
+			}
 		})
 		//查看所有代办事项
 		v1Group.DELETE("/todo:id",func(c *gin.Context)  {
-			
+			id, ok := c.Params.Get("id")
+			if !ok{
+				c.JSON(http.StatusOK, gin.H{"error":"Invalid id!"})
+				return
+			}
+			if err = DB.Where("id=?",id).Delete(Todo{}).Error;err != nil{
+				c.JSON(http.StatusOK,gin.H{"error":err.Error()})
+			}else{
+				c.JSON(http.StatusOK, gin.H{id : "deleted"})
+			}
 		})
 
 	}
